@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fidha | Cinematic Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,500;1,600;1,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-orange: #FF681B;
+      --primary-orange-hover: #ff7f36;
+      --bg-dark: #0a0604;
+      --text-white: #ffffff;
+      --text-muted: #e4dbd4;
+      --text-sub: #ded2c9;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-serif: 'Playfair Display', Georgia, serif;
+    }
+
+    html {
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      font-family: var(--font-sans);
+      scroll-behavior: auto;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      height: 600vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Fixed Fullscreen Background Canvas Animation */
+    #canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Sheer Ambient Golden-Hour Light Overlay */
+    .viewport-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(circle at 35% 35%, rgba(255, 120, 40, 0.05) 0%, transparent 60%);
+    }
+
+    /* Portfolio Sections Flow (Anchor landmarks for smooth scrollIntoView) */
+    .sections-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .portfolio-section {
+      height: 120vh;
+      width: 100%;
+      position: relative;
+      pointer-events: none;
+    }
+
+    /* Top Navigation Bar */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 48px;
+      pointer-events: none;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #ffffff;
+      pointer-events: auto;
+    }
+
+    .brand-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #FF681B 0%, #d44d06 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3.5px;
+      box-shadow: 0 4px 16px rgba(255, 104, 27, 0.35);
+    }
+
+    .brand-badge span {
+      width: 2.5px;
+      height: 15px;
+      background-color: #ffffff;
+      border-radius: 2px;
+    }
+
+    .brand-title {
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      color: #ffffff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Pill Navigation Menu (Desktop) */
+    .nav-pill {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      background: rgba(18, 12, 10, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      padding: 8px 24px;
+      border-radius: 9999px;
+      pointer-events: auto;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .nav-item {
+      text-decoration: none;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      padding: 4px 12px;
+      border-radius: 9999px;
+    }
+
+    .nav-item:hover {
+      color: #ffffff;
+    }
+
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    /* Top Nav Follow Button */
+    .btn-top-talk {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      background: var(--primary-orange);
+      color: #ffffff;
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 9px 22px;
+      border-radius: 9999px;
+      box-shadow: 0 4px 18px rgba(255, 104, 27, 0.35);
+      pointer-events: auto;
+      transition: all 0.25s ease;
+    }
+
+    .btn-top-talk:hover {
+      background: var(--primary-orange-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(255, 104, 27, 0.48);
+    }
+
+    /* Hero UI Wrapper: On Desktop (>768px), aligned to the RIGHT (38-42% width) */
+    .hero-wrapper {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 5vw;
+      pointer-events: none;
+    }
+
+    /* Compact Transparent Glassmorphism Card (38-42% width on desktop) */
+    .hero-glass-card {
+      width: clamp(400px, 40vw, 560px);
+      background: rgba(25, 16, 12, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      padding: 32px 28px;
+      border-radius: 22px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), 0 0 20px rgba(255, 104, 27, 0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      pointer-events: auto;
+      position: relative;
+    }
+
+    /* Location Badge with Lucide MapPin Icon */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #ffffff;
+      margin-bottom: 12px;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+    }
+
+    .loc-pin-icon {
+      width: 15px;
+      height: 15px;
+      stroke: #FF681B;
+      flex-shrink: 0;
+    }
+
+    /* Main Heading */
+    .hero-title {
+      font-size: clamp(34px, 3.5vw, 48px);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.6px;
+      color: #ffffff;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0.25em;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65);
+    }
+
+    /* Name Animation Requirements */
+    .name-wrapper {
+      display: inline-block;
+      cursor: default;
+    }
+
+    .name-highlight {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 600;
+      display: inline-block;
+      background: linear-gradient(
+        110deg,
+        #FF681B 0%,
+        #ff7e36 30%,
+        #ffe7d4 50%,
+        #ff7e36 70%,
+        #FF681B 100%
+      );
+      background-size: 240% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      opacity: 0;
+      transform: translateY(18px);
+      animation: nameFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards,
+                 nameLightSweep 2.2s ease 1s 1 normal forwards;
+      transition: transform 0.35s ease, filter 0.35s ease;
+    }
+
+    @keyframes nameFadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes nameLightSweep {
+      0% {
+        background-position: 220% center;
+      }
+      100% {
+        background-position: -220% center;
+      }
+    }
+
+    .period-glow {
+      display: inline-block;
+      color: #FF681B;
+      -webkit-text-fill-color: #FF681B;
+      opacity: 0;
+      animation: periodFade 0.6s ease 0.4s forwards,
+                 periodGlowPulse 2.2s ease 1.5s 1 normal forwards;
+    }
+
+    @keyframes periodFade {
+      to { opacity: 1; }
+    }
+
+    @keyframes periodGlowPulse {
+      0%, 100% {
+        filter: drop-shadow(0 0 0px rgba(255, 104, 27, 0));
+        transform: scale(1);
+      }
+      50% {
+        filter: drop-shadow(0 0 10px rgba(255, 104, 27, 0.95))
+                drop-shadow(0 0 20px rgba(255, 130, 50, 0.75));
+        transform: scale(1.15);
+      }
+    }
+
+    .name-wrapper:hover .name-highlight {
+      transform: translateY(-2px) scale(1.02);
+      filter: drop-shadow(0 4px 14px rgba(255, 104, 27, 0.4));
+    }
+
+    .name-wrapper:hover .period-glow {
+      filter: drop-shadow(0 0 8px rgba(255, 104, 27, 0.9));
+    }
+
+    /* Education & School Details */
+    .hero-education-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+
+    .hero-edu-badge {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--primary-orange);
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-school {
+      font-size: 13.5px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      color: var(--text-sub);
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Description */
+    .hero-description {
+      font-size: clamp(13px, 1.1vw, 14.5px);
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+      max-width: 390px;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Action Buttons */
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    /* Instagram Primary Button */
+    .btn-instagram {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      background: var(--primary-orange);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10.5px 20px;
+      border-radius: 9999px;
+      box-shadow: 0 4px 18px rgba(255, 104, 27, 0.35);
+      transition: all 0.25s ease;
+    }
+
+    .btn-instagram:hover {
+      background: var(--primary-orange-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(255, 104, 27, 0.48);
+    }
+
+    .btn-instagram svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Secondary Contact Button */
+    .btn-contact {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      background: rgba(20, 14, 11, 0.32);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10.5px 19px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      transition: all 0.25s ease;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn-contact:hover {
+      background: rgba(35, 22, 17, 0.55);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .btn-contact svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.9;
+    }
+
+    /* =========================================================
+       RESPONSIVE DESIGN (Mobile & Tablets <= 768px)
+       ========================================================= */
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 14px 18px;
+      }
+
+      .nav-pill {
+        display: none;
+      }
+
+      .brand-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+      }
+
+      .brand-badge span {
+        height: 13px;
+        width: 2px;
+      }
+
+      .brand-title {
+        font-size: 17px;
+      }
+
+      .btn-top-talk {
+        font-size: 12px;
+        padding: 7px 16px;
+      }
+
+      .viewport-overlay {
+        background: linear-gradient(
+          to bottom,
+          rgba(10, 6, 4, 0.3) 0%,
+          transparent 18%,
+          transparent 52%,
+          rgba(10, 6, 4, 0.35) 75%,
+          rgba(10, 6, 4, 0.55) 100%
+        );
+      }
+
+      .hero-wrapper {
+        justify-content: center;
+        align-items: flex-end;
+        padding: 0 16px 20px 16px;
+      }
+
+      .hero-glass-card {
+        width: 100%;
+        max-width: min(390px, 100%);
+        padding: 18px 16px;
+        border-radius: 20px;
+        align-items: center;
+        text-align: center;
+        background: rgba(25, 16, 12, 0.22);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .status-badge {
+        font-size: 9.5px;
+        letter-spacing: 1.6px;
+        margin-bottom: 6px;
+        gap: 5px;
+      }
+
+      .loc-pin-icon {
+        width: 13px;
+        height: 13px;
+      }
+
+      .hero-title {
+        justify-content: center;
+        font-size: 24px;
+        line-height: 1.15;
+        margin-bottom: 6px;
+        gap: 0.2em;
+      }
+
+      .hero-title .name-highlight {
+        font-size: 26px;
+      }
+
+      .hero-education-block {
+        gap: 3px;
+        margin-bottom: 8px;
+        align-items: center;
+      }
+
+      .hero-edu-badge {
+        font-size: 9.5px;
+        letter-spacing: 1.6px;
+      }
+
+      .hero-school {
+        font-size: 12px;
+      }
+
+      .hero-description {
+        font-size: 12.5px;
+        line-height: 1.45;
+        margin-bottom: 15px;
+        max-width: 320px;
+      }
+
+      .hero-actions {
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+        width: 100%;
+      }
+
+      .btn-instagram {
+        font-size: 11.5px;
+        padding: 9px 13px;
+        gap: 5px;
+        flex: 1 1 auto;
+        justify-content: center;
+        white-space: nowrap;
+      }
+
+      .btn-instagram svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      .btn-contact {
+        font-size: 11.5px;
+        padding: 9px 13px;
+        gap: 5px;
+        flex: 0 0 auto;
+        justify-content: center;
+        white-space: nowrap;
+      }
+
+      .btn-contact svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+
+    /* Smallest Mobile Viewports (<= 360px, e.g. 320px) */
+    @media (max-width: 360px) {
+      .hero-wrapper {
+        padding: 0 10px 14px 10px;
+      }
+
+      .hero-glass-card {
+        padding: 14px 12px;
+        border-radius: 16px;
+      }
+
+      .hero-title {
+        font-size: 21px;
+      }
+
+      .hero-title .name-highlight {
+        font-size: 23px;
+      }
+
+      .hero-edu-badge {
+        font-size: 8.5px;
+        letter-spacing: 1.2px;
+      }
+
+      .hero-school {
+        font-size: 11px;
+      }
+
+      .hero-description {
+        font-size: 11.5px;
+        line-height: 1.4;
+        margin-bottom: 12px;
+      }
+
+      .hero-actions {
+        gap: 6px;
+      }
+
+      .btn-instagram {
+        font-size: 10.5px;
+        padding: 8px 10px;
+        gap: 4px;
+      }
+
+      .btn-instagram svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      .btn-contact {
+        font-size: 10.5px;
+        padding: 8px 10px;
+        gap: 4px;
+      }
+
+      .btn-contact svg {
+        width: 11px;
+        height: 11px;
+      }
+    }
+
+    /* Accessibility: Reduced-Motion Preferences */
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto !important;
+      }
+      .name-highlight,
+      .period-glow,
+      .btn-instagram,
+      .btn-contact,
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Fullscreen Canvas Cinematic Video Frame Sequence -->
+  <canvas id="canvas"></canvas>
+
+  <!-- Sheer Ambient Light Overlay -->
+  <div class="viewport-overlay"></div>
+
+  <!-- Portfolio Sections Landmarks for scrollIntoView Navigation -->
+  <div class="sections-container">
+    <section id="home" class="portfolio-section" aria-label="Home"></section>
+    <section id="about" class="portfolio-section" aria-label="About"></section>
+    <section id="moments" class="portfolio-section" aria-label="Moments"></section>
+    <section id="journal" class="portfolio-section" aria-label="Journal"></section>
+    <section id="contact" class="portfolio-section" aria-label="Connect"></section>
+  </div>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <a href="#home" class="brand-group">
+      <div class="brand-badge">
+        <span></span>
+        <span></span>
+      </div>
+      <span class="brand-title">Fidha</span>
+    </a>
+
+    <nav class="nav-pill">
+      <a href="#home" class="nav-item active">Home</a>
+      <a href="#about" class="nav-item">About</a>
+      <a href="#moments" class="nav-item">Moments</a>
+      <a href="#journal" class="nav-item">Journal</a>
+      <a href="#contact" class="nav-item">Connect</a>
+    </nav>
+
+    <a href="https://www.instagram.com/f1._dha/" target="_blank" rel="noopener noreferrer" class="btn-top-talk">
+      Follow ↗
+    </a>
+  </header>
+
+  <!-- Hero Content (Right-aligned 38-42% on desktop, below her face on mobile) -->
+  <main class="hero-wrapper">
+    <div class="hero-glass-card">
+      <div class="status-badge">
+        <svg class="loc-pin-icon" viewBox="0 0 24 24" fill="none" stroke="#FF681B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span>THRISSUR, KERALA</span>
+      </div>
+
+      <h1 class="hero-title">
+        Hi, I'm
+        <span class="name-wrapper">
+          <span class="name-highlight">Fidha</span><span class="period-glow">.</span>
+        </span>
+      </h1>
+
+      <div class="hero-education-block">
+        <div class="hero-edu-badge">+2 CBSE STUDENT</div>
+        <div class="hero-school">IES Public School, Chittilappilly</div>
+      </div>
+
+
+      <div class="hero-actions">
+        <!-- Instagram Primary Button -->
+        <a href="https://www.instagram.com/f1._dha/" target="_blank" rel="noopener noreferrer" class="btn-instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+          </svg>
+          Follow on Instagram ↗
+        </a>
+
+        <!-- Secondary Contact Button -->
+        <a href="https://www.instagram.com/f1._dha/" target="_blank" rel="noopener noreferrer" class="btn-contact">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+          Say Hello
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const TOTAL_FRAMES = 240;
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const getFramePath = (index) => {
+        const padded = String(index).padStart(3, '0');
+        return `ezgif-frame-${padded}.jpg`;
+      };
+
+      const images = [];
+      let targetFrame = 1;
+      let currentFrame = 1;
+      let renderedFrame = null;
+
+      function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(window.innerWidth * dpr);
+        canvas.height = Math.round(window.innerHeight * dpr);
+
+        if (renderedFrame && images[renderedFrame] && images[renderedFrame].complete) {
+          drawFrame(images[renderedFrame]);
+        }
+      }
+
+      function drawFrame(img) {
+        if (!img || !img.complete || img.naturalWidth === 0) return;
+
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const iw = img.naturalWidth;
+        const ih = img.naturalHeight;
+
+        const isDesktop = window.innerWidth > 768;
+        const baseScale = Math.max(cw / iw, ch / ih);
+        const scale = isDesktop ? baseScale * 1.10 : baseScale;
+        const nw = iw * scale;
+        const nh = ih * scale;
+
+        let cx, cy;
+
+        if (isDesktop) {
+          // On desktops/laptops (>768px): Card is on the RIGHT (38-42% width).
+          // Position image so Fidha's face is clearly visible on the LEFT side with ample breathing room.
+          cx = Math.max(cw - nw, Math.min(0, (cw - nw) * 0.50));
+          cy = (ch - nh) / 2;
+        } else {
+          // On mobile portrait (<=768px): Center horizontally and position her face in upper portion
+          cx = (cw - nw) * 0.46;
+          cy = Math.min(0, (ch - nh) * 0.12);
+        }
+
+        ctx.clearRect(0, 0, cw, ch);
+        ctx.drawImage(img, cx, cy, nw, nh);
+      }
+
+      function updateTargetFrame() {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollTop = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+        const progress = maxScroll > 0 ? Math.min(1, Math.max(0, scrollTop / maxScroll)) : 0;
+        targetFrame = 1 + progress * (TOTAL_FRAMES - 1);
+      }
+
+      function findClosestLoadedFrame(preferredIndex) {
+        if (images[preferredIndex] && images[preferredIndex].complete && images[preferredIndex].naturalWidth > 0) {
+          return preferredIndex;
+        }
+        for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
+          const down = preferredIndex - offset;
+          if (down >= 1 && images[down] && images[down].complete && images[down].naturalWidth > 0) return down;
+          const up = preferredIndex + offset;
+          if (up <= TOTAL_FRAMES && images[up] && images[up].complete && images[up].naturalWidth > 0) return up;
+        }
+        return null;
+      }
+
+      function animate() {
+        // Silky smooth lerp damping for 60/120fps motion
+        const diff = targetFrame - currentFrame;
+        if (Math.abs(diff) > 0.001) {
+          currentFrame += diff * 0.09;
+        } else {
+          currentFrame = targetFrame;
+        }
+
+        const desiredIndex = Math.min(TOTAL_FRAMES, Math.max(1, Math.round(currentFrame)));
+        const frameToRender = findClosestLoadedFrame(desiredIndex);
+
+        if (frameToRender && frameToRender !== renderedFrame) {
+          const img = images[frameToRender];
+          if (img && img.complete && img.naturalWidth > 0) {
+            drawFrame(img);
+            renderedFrame = frameToRender;
+          }
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      // Preload images and bind handlers
+      function init() {
+        resize();
+        window.addEventListener('resize', resize, { passive: true });
+        window.addEventListener('scroll', updateTargetFrame, { passive: true });
+
+        // Load Frame 1 first and render immediately
+        const firstImg = new Image();
+        firstImg.onload = () => {
+          if (!renderedFrame) {
+            drawFrame(firstImg);
+            renderedFrame = 1;
+          }
+        };
+        firstImg.src = getFramePath(1);
+        images[1] = firstImg;
+        if (firstImg.complete && firstImg.naturalWidth > 0) {
+          drawFrame(firstImg);
+          renderedFrame = 1;
+        }
+
+        // Load remaining 239 frames in background
+        for (let i = 2; i <= TOTAL_FRAMES; i++) {
+          const img = new Image();
+          img.src = getFramePath(i);
+          images[i] = img;
+        }
+
+        updateTargetFrame();
+        requestAnimationFrame(animate);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+
+    // =========================================================================
+    // AUTOMATIC SCROLLING & INACTIVITY MANAGER
+    // Section-by-section auto-scroll with 10s timer, user cancellation & resume
+    // =========================================================================
+    (function initAutoScrollFeature() {
+      const INACTIVITY_MS = 10000; // 10 seconds
+      const sections = Array.from(document.querySelectorAll('.portfolio-section'));
+      if (sections.length <= 1) return;
+
+      let inactivityTimer = null;
+      let isProgrammaticScrolling = false;
+      let programmaticScrollResetTimeout = null;
+
+      // Determine current section index based on scroll position
+      function getCurrentSectionIndex() {
+        const scrollY = window.scrollY || window.pageYOffset || 0;
+        const threshold = window.innerHeight * 0.35; // 35% viewport threshold
+        let currentIndex = 0;
+
+        for (let i = 0; i < sections.length; i++) {
+          if (scrollY + threshold >= sections[i].offsetTop) {
+            currentIndex = i;
+          }
+        }
+        return currentIndex;
+      }
+
+      // Keep navbar active item in sync with current section
+      function syncNavbarActiveState() {
+        const activeIdx = getCurrentSectionIndex();
+        const navLinks = document.querySelectorAll('.nav-pill .nav-item');
+        navLinks.forEach((link, idx) => {
+          if (idx === activeIdx) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      }
+
+      // Smoothly advance to the next section
+      function autoScrollToNextSection() {
+        // Respect reduced-motion preferences
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          return;
+        }
+
+        const currentIndex = getCurrentSectionIndex();
+        const nextIndex = currentIndex + 1;
+
+        // Stop auto-scrolling when reaching the final section
+        if (nextIndex >= sections.length) {
+          clearTimeout(inactivityTimer);
+          return;
+        }
+
+        const nextSection = sections[nextIndex];
+        if (!nextSection) return;
+
+        // Set programmatic scrolling flag to prevent scroll events from triggering false user cancels
+        isProgrammaticScrolling = true;
+        nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Once the smooth scroll finishes (~1200ms), clear the programmatic flag
+        // and start the next 10-second inactivity timer
+        clearTimeout(programmaticScrollResetTimeout);
+        programmaticScrollResetTimeout = setTimeout(() => {
+          isProgrammaticScrolling = false;
+          // Continue to next section after another 10s if not at the final section
+          if (getCurrentSectionIndex() < sections.length - 1) {
+            startInactivityTimer();
+          }
+        }, 1300);
+      }
+
+      // Start or restart the 10-second inactivity timer
+      function startInactivityTimer() {
+        clearTimeout(inactivityTimer);
+
+        // Do not schedule if already on the final section
+        if (getCurrentSectionIndex() >= sections.length - 1) {
+          return;
+        }
+
+        inactivityTimer = setTimeout(autoScrollToNextSection, INACTIVITY_MS);
+      }
+
+      // Handle user interaction: cancels pending scroll and resets 10s timer
+      function handleUserActivity(event) {
+        // If this scroll event is caused by our programmatic scrollIntoView, do not cancel
+        if (event && event.type === 'scroll' && isProgrammaticScrolling) {
+          return;
+        }
+
+        // Active user interaction cancels programmatic scrolling mode immediately
+        isProgrammaticScrolling = false;
+        clearTimeout(programmaticScrollResetTimeout);
+
+        // Cancel pending timer and restart a full 10 seconds of inactivity
+        startInactivityTimer();
+      }
+
+      // Register interaction listeners: touch, pointer, wheel, mouse, keyboard
+      const activityEvents = ['pointerdown', 'touchstart', 'touchmove', 'wheel', 'keydown', 'mousedown'];
+      activityEvents.forEach((eventType) => {
+        window.addEventListener(eventType, handleUserActivity, { passive: true });
+      });
+
+      // Handle scroll events (manual scrollbar thumb dragging or gestures)
+      window.addEventListener('scroll', () => {
+        syncNavbarActiveState();
+        handleUserActivity({ type: 'scroll' });
+      }, { passive: true });
+
+      // Handle navigation links click
+      document.querySelectorAll('.nav-pill a, .navbar a').forEach((link) => {
+        link.addEventListener('click', (e) => {
+          const targetId = link.getAttribute('href');
+          if (targetId && targetId.startsWith('#')) {
+            const targetEl = document.querySelector(targetId);
+            if (targetEl) {
+              e.preventDefault();
+              isProgrammaticScrolling = true;
+              targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              clearTimeout(programmaticScrollResetTimeout);
+              programmaticScrollResetTimeout = setTimeout(() => {
+                isProgrammaticScrolling = false;
+                startInactivityTimer();
+              }, 1300);
+            }
+          }
+          handleUserActivity(e);
+        });
+      });
+
+      // Start initial 10-second timer on page load
+      startInactivityTimer();
+    })();
+  </script>
+</body>
+</html>
