@@ -745,7 +745,7 @@
 
   <script>
     (function () {
-      const TOTAL_FRAMES = 240;
+      const TOTAL_FRAMES = 238;
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
 
@@ -758,6 +758,17 @@
       let targetFrame = 1;
       let currentFrame = 1;
       let renderedFrame = null;
+
+      // Phone View Auto-play Engine (24 fps cinematic playback)
+      const FPS = 24;
+      const FRAME_INTERVAL = 1000 / FPS;
+      let lastAutoPlayTime = 0;
+      let isUserInteracting = false;
+      let interactionTimeout = null;
+
+      function isPhoneView() {
+        return window.innerWidth <= 768;
+      }
 
       function resize() {
         const dpr = window.devicePixelRatio || 1;
@@ -786,12 +797,11 @@
         let cx, cy;
 
         if (isDesktop) {
-          // On desktops/laptops (>768px): Card is on the RIGHT (38-42% width).
-          // Position image so Fidha's face is clearly visible on the LEFT side with ample breathing room.
+          // Desktops/laptops: Fidha visible on the left, card on the right
           cx = Math.max(cw - nw, Math.min(0, (cw - nw) * 0.50));
           cy = (ch - nh) / 2;
         } else {
-          // On mobile portrait (<=768px): Center horizontally and position her face in upper portion
+          // Mobile portrait: Center horizontally and position her face in upper portion
           cx = (cw - nw) * 0.46;
           cy = Math.min(0, (ch - nh) * 0.12);
         }
@@ -801,6 +811,9 @@
       }
 
       function updateTargetFrame() {
+        if (isPhoneView() && !isUserInteracting) {
+          return; // In phone view, frame playback is driven automatically over time
+        }
         const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
         const scrollTop = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
         const progress = maxScroll > 0 ? Math.min(1, Math.max(0, scrollTop / maxScroll)) : 0;
@@ -820,13 +833,31 @@
         return null;
       }
 
-      function animate() {
-        // Silky smooth lerp damping for 60/120fps motion
-        const diff = targetFrame - currentFrame;
-        if (Math.abs(diff) > 0.001) {
-          currentFrame += diff * 0.09;
+      function animate(now) {
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (isPhoneView() && !reducedMotion && !isUserInteracting) {
+          // Automatic playback in phone view over time at 24fps
+          if (!lastAutoPlayTime) lastAutoPlayTime = now;
+          const elapsed = now - lastAutoPlayTime;
+
+          if (elapsed >= FRAME_INTERVAL) {
+            const steps = Math.floor(elapsed / FRAME_INTERVAL);
+            lastAutoPlayTime = now - (elapsed % FRAME_INTERVAL);
+
+            // Continuously loop forward through all 238 frames
+            currentFrame = ((currentFrame - 1 + steps) % TOTAL_FRAMES) + 1;
+            targetFrame = currentFrame;
+          }
         } else {
-          currentFrame = targetFrame;
+          // Desktop scrub or manual interaction: lerp towards targetFrame
+          lastAutoPlayTime = now;
+          const diff = targetFrame - currentFrame;
+          if (Math.abs(diff) > 0.001) {
+            currentFrame += diff * 0.09;
+          } else {
+            currentFrame = targetFrame;
+          }
         }
 
         const desiredIndex = Math.min(TOTAL_FRAMES, Math.max(1, Math.round(currentFrame)));
@@ -843,11 +874,33 @@
         requestAnimationFrame(animate);
       }
 
+      // Interaction listeners for phone view
+      function onPhoneInteractionStart() {
+        if (!isPhoneView()) return;
+        isUserInteracting = true;
+        clearTimeout(interactionTimeout);
+      }
+
+      function onPhoneInteractionEnd() {
+        if (!isPhoneView()) return;
+        clearTimeout(interactionTimeout);
+        interactionTimeout = setTimeout(() => {
+          isUserInteracting = false;
+          lastAutoPlayTime = 0;
+        }, 1500);
+      }
+
       // Preload images and bind handlers
       function init() {
         resize();
         window.addEventListener('resize', resize, { passive: true });
         window.addEventListener('scroll', updateTargetFrame, { passive: true });
+
+        // Touch listeners to pause/resume auto-play gracefully during manual swiping
+        window.addEventListener('touchstart', onPhoneInteractionStart, { passive: true });
+        window.addEventListener('touchmove', onPhoneInteractionStart, { passive: true });
+        window.addEventListener('touchend', onPhoneInteractionEnd, { passive: true });
+        window.addEventListener('touchcancel', onPhoneInteractionEnd, { passive: true });
 
         // Load Frame 1 first and render immediately
         const firstImg = new Image();
@@ -864,7 +917,7 @@
           renderedFrame = 1;
         }
 
-        // Load remaining 239 frames in background
+        // Load remaining 237 frames in background
         for (let i = 2; i <= TOTAL_FRAMES; i++) {
           const img = new Image();
           img.src = getFramePath(i);
@@ -883,7 +936,7 @@
     })();
 
     // =========================================================================
-    // AUTOMATIC SCROLLING & INACTIVITY MANAGER
+    // AUTOMATIC SCROLLING & INACTIVITY MANAGER (Desktop)
     // Section-by-section auto-scroll with 10s timer, user cancellation & resume
     // =========================================================================
     (function initAutoScrollFeature() {
@@ -895,10 +948,9 @@
       let isProgrammaticScrolling = false;
       let programmaticScrollResetTimeout = null;
 
-      // Determine current section index based on scroll position
       function getCurrentSectionIndex() {
         const scrollY = window.scrollY || window.pageYOffset || 0;
-        const threshold = window.innerHeight * 0.35; // 35% viewport threshold
+        const threshold = window.innerHeight * 0.35;
         let currentIndex = 0;
 
         for (let i = 0; i < sections.length; i++) {
@@ -909,7 +961,6 @@
         return currentIndex;
       }
 
-      // Keep navbar active item in sync with current section
       function syncNavbarActiveState() {
         const activeIdx = getCurrentSectionIndex();
         const navLinks = document.querySelectorAll('.nav-pill .nav-item');
@@ -922,17 +973,20 @@
         });
       }
 
-      // Smoothly advance to the next section
       function autoScrollToNextSection() {
-        // Respect reduced-motion preferences
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          return;
+        }
+
+        // In phone view, continuous auto-play provides the cinematic experience;
+        // avoid abrupt jumpy scrollIntoView shifts on mobile.
+        if (window.innerWidth <= 768) {
           return;
         }
 
         const currentIndex = getCurrentSectionIndex();
         const nextIndex = currentIndex + 1;
 
-        // Stop auto-scrolling when reaching the final section
         if (nextIndex >= sections.length) {
           clearTimeout(inactivityTimer);
           return;
@@ -941,62 +995,46 @@
         const nextSection = sections[nextIndex];
         if (!nextSection) return;
 
-        // Set programmatic scrolling flag to prevent scroll events from triggering false user cancels
         isProgrammaticScrolling = true;
         nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        // Once the smooth scroll finishes (~1200ms), clear the programmatic flag
-        // and start the next 10-second inactivity timer
         clearTimeout(programmaticScrollResetTimeout);
         programmaticScrollResetTimeout = setTimeout(() => {
           isProgrammaticScrolling = false;
-          // Continue to next section after another 10s if not at the final section
           if (getCurrentSectionIndex() < sections.length - 1) {
             startInactivityTimer();
           }
         }, 1300);
       }
 
-      // Start or restart the 10-second inactivity timer
       function startInactivityTimer() {
         clearTimeout(inactivityTimer);
-
-        // Do not schedule if already on the final section
-        if (getCurrentSectionIndex() >= sections.length - 1) {
-          return;
-        }
+        if (window.innerWidth <= 768) return;
+        if (getCurrentSectionIndex() >= sections.length - 1) return;
 
         inactivityTimer = setTimeout(autoScrollToNextSection, INACTIVITY_MS);
       }
 
-      // Handle user interaction: cancels pending scroll and resets 10s timer
       function handleUserActivity(event) {
-        // If this scroll event is caused by our programmatic scrollIntoView, do not cancel
         if (event && event.type === 'scroll' && isProgrammaticScrolling) {
           return;
         }
 
-        // Active user interaction cancels programmatic scrolling mode immediately
         isProgrammaticScrolling = false;
         clearTimeout(programmaticScrollResetTimeout);
-
-        // Cancel pending timer and restart a full 10 seconds of inactivity
         startInactivityTimer();
       }
 
-      // Register interaction listeners: touch, pointer, wheel, mouse, keyboard
       const activityEvents = ['pointerdown', 'touchstart', 'touchmove', 'wheel', 'keydown', 'mousedown'];
       activityEvents.forEach((eventType) => {
         window.addEventListener(eventType, handleUserActivity, { passive: true });
       });
 
-      // Handle scroll events (manual scrollbar thumb dragging or gestures)
       window.addEventListener('scroll', () => {
         syncNavbarActiveState();
         handleUserActivity({ type: 'scroll' });
       }, { passive: true });
 
-      // Handle navigation links click
       document.querySelectorAll('.nav-pill a, .navbar a').forEach((link) => {
         link.addEventListener('click', (e) => {
           const targetId = link.getAttribute('href');
@@ -1017,9 +1055,9 @@
         });
       });
 
-      // Start initial 10-second timer on page load
       startInactivityTimer();
     })();
+
   </script>
 </body>
 </html>
